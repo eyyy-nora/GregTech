@@ -161,6 +161,11 @@ public class ConfigHolder {
                 "This does NOT apply to the World Accelerator, but to external effects like Time in a Bottle.",
                 "Default: true" })
         public boolean allowTickAcceleration = true;
+
+        @Config.Comment({ "Wether Large Turbine Rotors should be replaceable with pipes or other forms of automation.",
+                "Default: false" })
+        @Config.RequiresMcRestart
+        public boolean automateLargeTurbineRotors = false;
     }
 
     public static class WorldGenOptions {

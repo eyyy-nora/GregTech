@@ -1,6 +1,7 @@
 package gregtech.common.metatileentities.multi.multiblockpart;
 
 import gregtech.api.capability.GregtechDataCodes;
+import gregtech.api.capability.IControllable;
 import gregtech.api.capability.IRotorHolder;
 import gregtech.api.capability.impl.MultiblockFuelRecipeLogic;
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
@@ -14,6 +15,7 @@ import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.util.RelativeDirection;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.common.ConfigHolder;
 import gregtech.common.items.behaviors.AbstractMaterialPartBehavior;
 import gregtech.common.items.behaviors.TurbineRotorBehavior;
 import gregtech.common.metatileentities.multi.electric.generator.MetaTileEntityLargeTurbine;
@@ -32,6 +34,9 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import codechicken.lib.raytracer.CuboidRayTraceResult;
@@ -41,6 +46,7 @@ import codechicken.lib.vec.Matrix4;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiablePart
@@ -57,10 +63,20 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
     private boolean isRotorSpinning;
     private boolean frontFaceFree;
 
+    private static final boolean automateLargeTurbineRotors = ConfigHolder.machines.automateLargeTurbineRotors;
+
     public MetaTileEntityRotorHolder(ResourceLocation metaTileEntityId, int tier) {
-        super(metaTileEntityId, tier, false);
+        super(metaTileEntityId, tier, automateLargeTurbineRotors);
         this.inventory = new InventoryRotorHolder();
         this.maxSpeed = 2000 + 1000 * tier;
+        if (automateLargeTurbineRotors) this.initializeInventory();
+    }
+
+    @Override
+    public <T> T getCapability(Capability<T> capability, EnumFacing side) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && automateLargeTurbineRotors)
+            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(this.inventory);
+        return super.getCapability(capability, side);
     }
 
     @Override
@@ -72,6 +88,12 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
     public IItemHandlerModifiable getImportItems() {
         return this.inventory;
     }
+
+    @Override
+    public IItemHandlerModifiable getExportItems() {
+        return this.inventory;
+    }
+
 
     @Override
     protected ModularUI createUI(@NotNull EntityPlayer entityPlayer) {
@@ -164,6 +186,9 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
     }
 
     private boolean checkTurbineFaceFree() {
+        // skip check if automation of large turbine rotors is allowed
+        if (automateLargeTurbineRotors) return true;
+
         final EnumFacing front = getFrontFacing();
         // this can be anything really, as long as it is not up/down when on Y axis
         final EnumFacing upwards = front.getAxis() == EnumFacing.Axis.Y ? EnumFacing.NORTH : EnumFacing.UP;

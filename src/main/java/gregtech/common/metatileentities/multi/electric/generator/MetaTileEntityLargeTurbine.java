@@ -91,7 +91,7 @@ public class MetaTileEntityLargeTurbine extends FuelMultiblockController
     public boolean isRotorFaceFree() {
         IRotorHolder rotorHolder = getRotorHolder();
         if (rotorHolder != null)
-            return isStructureFormed() && getRotorHolder().isFrontFaceFree();
+            return isStructureFormed() && rotorHolder.isFrontFaceFree();
         return false;
     }
 
